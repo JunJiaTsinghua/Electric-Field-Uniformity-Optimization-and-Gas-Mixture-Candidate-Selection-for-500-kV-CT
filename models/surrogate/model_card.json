@@ -1,0 +1,35 @@
+{
+  "status": "Computational screening model for a low-GWP gas-insulated current transformer",
+  "data_provenance": {
+    "electric_field": "actual COMSOL 6.2 solver outputs represented by the independently validated Kriging model",
+    "thermal_properties": "NIST 300 K reference values and an explicit Wassiljewa/Wilke-type mixing rule",
+    "breakdown": "literature-constrained scenario inputs; not validated ternary 100 mm CT measurements",
+    "detection_and_cost": "declared dimensionless scenario proxies; not measurements or supplier quotations"
+  },
+  "NSGA_II": {
+    "population": 100,
+    "generations": 200,
+    "seed": 20260816,
+    "objectives": [
+      "maximize S_ins",
+      "maximize S_th",
+      "maximize S_det",
+      "maximize S_env",
+      "minimize S_cost"
+    ],
+    "reported_candidates": 67,
+    "selection": "deterministic farthest-point subset in normalized five-objective space from the final nondominated set"
+  },
+  "Monte_Carlo": {
+    "seed": 20260815,
+    "samples_per_candidate": 2000,
+    "candidate_count": 67,
+    "composition_constraint": "additive Gaussian perturbation, nonnegative clipping, then unit-sum renormalization",
+    "pressure_temperature_coupling": "closed fixed-volume p_actual=p_nominal*(T/T0)*(1+fill_error)",
+    "surrogate_uncertainty": "Gaussian residual with sigma=0.04625271143248838 kV/mm from the independent validation RMSE",
+    "breakdown_model_uncertainty": "multiplicative clipped-normal factor: draw N(1, 0.08^2), then clip to [0.76,1.24]; not a rejection-sampled truncated normal"
+  },
+  "claim_limit": "The dataset demonstrates the method and supports candidate screening. It does not establish a unique engineering optimum or experimental qualification. Selected composition is expected to change when the helium breakdown input, cost basis, temperature, or objective preferences change.",
+  "electric_field_scope": "Original physics-controlled medium-mesh gas-domain maximum with sharp floating-electrode ends; independent rounded-end mesh checks do not refit this surrogate or resolve its sharp-end bias.",
+  "reproducibility": "Stored inputs, ordered random draws and fixed software versions define the numerical experiments; seeds identify designs and runs rather than dates."
+}
