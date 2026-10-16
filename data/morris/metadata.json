@@ -1,0 +1,85 @@
+{
+  "comsol_version": "6.2.0.290",
+  "reference_seed": 20260814,
+  "design_seeds": [
+    20260814,
+    20261009,
+    20261010,
+    20261011,
+    20261012,
+    20261013,
+    20261014,
+    20261015,
+    20261016,
+    20261017,
+    20261018
+  ],
+  "trajectories": 10,
+  "points_per_trajectory": 8,
+  "levels": 4,
+  "normalized_step_magnitude": 0.6666666666666666,
+  "variables": [
+    "r_hv_proxy_mm",
+    "d_mm",
+    "r_g_proxy_mm",
+    "l_m_mm",
+    "h_m",
+    "l_s_proxy_mm",
+    "theta_s_deg"
+  ],
+  "bounds": [
+    [
+      50,
+      90
+    ],
+    [
+      80,
+      160
+    ],
+    [
+      5,
+      25
+    ],
+    [
+      30,
+      90
+    ],
+    [
+      0.3,
+      0.65
+    ],
+    [
+      100,
+      220
+    ],
+    [
+      20,
+      70
+    ]
+  ],
+  "units": [
+    "mm",
+    "mm",
+    "mm",
+    "mm",
+    "1",
+    "mm",
+    "degrees"
+  ],
+  "design_rng": "java.util.Random",
+  "bootstrap_rng": "NumPy PCG64",
+  "bootstrap_seed": 20261009,
+  "bootstrap_replicates": 20000,
+  "mu_star_threshold_kV_per_mm": 0.1,
+  "response": "Maximum electric field in gas domain 1; MaxSurface(es.normE), kV/mm; medium physics-controlled mesh preset 5.",
+  "reference_reproduction": "The reference design was repeated with seed 20260814 and reproduced all 80 inputs and responses exactly. Only one copy of these 80 rows is included.",
+  "geometry_scope": {
+    "type": "2D axisymmetric equivalent geometry; seven geometric proxies",
+    "gas": "rectangle r=[r_hv_proxy,r_hv_proxy+d], z=[0,500] mm",
+    "floating_electrode_1": "r_m=r_hv_proxy+0.42*d; thickness 4 mm; length l_m; z center h_m*500",
+    "floating_electrode_2": "r_sh=r_hv_proxy+0.62*d+0.20*r_g_proxy; length=25+0.20*l_s_proxy; z_sh=315+20*sin(theta_s)",
+    "charge": "Both floating electrodes have zero prescribed charge.",
+    "limitation": "This geometry contains two floating electrodes and differs from the four-variable training geometry, which contains one floating electrode at r_m=120 mm. The analyses are separate equivalent geometries, not a demonstrated reduction of one common CAD model."
+  },
+  "source_file": "data/morris/samples.csv"
+}

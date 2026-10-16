@@ -1,0 +1,4 @@
+mesh,COMSOL_mesh_level,domain_elements,boundary_elements,degrees_of_freedom,minimum_element_quality,Emax_kV_per_mm,Vfloat_kV,Emax_change_from_previous_percent,Vfloat_change_from_previous_percent
+Coarse,7,219,41,480,0.5116,5.917583499634307,180.56848764446465,,
+Medium,5,455,61,972,0.5305,5.948772098304927,180.5434901879584,0.527037,-0.013843
+Fine,3,773,89,1636,0.5720,5.956820735996510,180.54460052089016,0.135299,0.000615

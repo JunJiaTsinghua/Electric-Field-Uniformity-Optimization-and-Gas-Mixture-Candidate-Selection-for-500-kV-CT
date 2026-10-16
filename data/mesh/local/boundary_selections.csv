@@ -1,0 +1,31 @@
+case,level,selection,entities,definition_mm
+sharp_rect,L01,gasdom,[1],"gas anchor r71..72,z249..251"
+sharp_rect,L01,hv,[1],"r70,z0..500"
+sharp_rect,L01,gnd,[8],"r190,z0..500"
+sharp_rect,L01,floating,"[4, 5, 6, 7]","r120..124,z230..290 full envelope"
+sharp_rect,L01,ends,"[5, 6]",lower z230..232 and upper z288..290
+sharp_rect,L02,gasdom,[1],"gas anchor r71..72,z249..251"
+sharp_rect,L02,hv,[1],"r70,z0..500"
+sharp_rect,L02,gnd,[8],"r190,z0..500"
+sharp_rect,L02,floating,"[4, 5, 6, 7]","r120..124,z230..290 full envelope"
+sharp_rect,L02,ends,"[5, 6]",lower z230..232 and upper z288..290
+sharp_rect,L03,gasdom,[1],"gas anchor r71..72,z249..251"
+sharp_rect,L03,hv,[1],"r70,z0..500"
+sharp_rect,L03,gnd,[8],"r190,z0..500"
+sharp_rect,L03,floating,"[4, 5, 6, 7]","r120..124,z230..290 full envelope"
+sharp_rect,L03,ends,"[5, 6]",lower z230..232 and upper z288..290
+rounded_R2,L01,gasdom,[1],"gas anchor r71..72,z249..251"
+rounded_R2,L01,hv,[1],"r70,z0..500"
+rounded_R2,L01,gnd,[6],"r190,z0..500"
+rounded_R2,L01,floating,"[4, 5, 7, 8, 9, 10]","r120..124,z230..290 full envelope"
+rounded_R2,L01,ends,"[7, 9, 8, 10]",lower z230..232 and upper z288..290
+rounded_R2,L02,gasdom,[1],"gas anchor r71..72,z249..251"
+rounded_R2,L02,hv,[1],"r70,z0..500"
+rounded_R2,L02,gnd,[6],"r190,z0..500"
+rounded_R2,L02,floating,"[4, 5, 7, 8, 9, 10]","r120..124,z230..290 full envelope"
+rounded_R2,L02,ends,"[7, 9, 8, 10]",lower z230..232 and upper z288..290
+rounded_R2,L03,gasdom,[1],"gas anchor r71..72,z249..251"
+rounded_R2,L03,hv,[1],"r70,z0..500"
+rounded_R2,L03,gnd,[6],"r190,z0..500"
+rounded_R2,L03,floating,"[4, 5, 7, 8, 9, 10]","r120..124,z230..290 full envelope"
+rounded_R2,L03,ends,"[7, 9, 8, 10]",lower z230..232 and upper z288..290

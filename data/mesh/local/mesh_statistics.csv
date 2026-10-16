@@ -1,0 +1,7 @@
+case,level,end_cap_hmax_mm,hmin_setting_mm,bulk_hmax_mm,hv_hmax_mm,floating_straight_hmax_mm,growth,triangles,vertices,min_quality,mean_quality,measure
+sharp_rect,L01,0.2,0.05,4,1,0.5,1.2,22371,11679,0.7529,0.9698,volume_vs_circumradius
+sharp_rect,L02,0.1,0.025,4,1,0.5,1.2,23851,12445,0.7271,0.9693,volume_vs_circumradius
+sharp_rect,L03,0.05,0.0125,4,1,0.5,1.2,26147,13640,0.6735,0.9681,volume_vs_circumradius
+rounded_R2,L01,0.2,0.05,4,1,0.5,1.2,22517,11756,0.7529,0.9702,volume_vs_circumradius
+rounded_R2,L02,0.1,0.025,4,1,0.5,1.2,24523,12796,0.7362,0.9681,volume_vs_circumradius
+rounded_R2,L03,0.05,0.0125,4,1,0.5,1.2,27887,14547,0.6837,0.9664,volume_vs_circumradius

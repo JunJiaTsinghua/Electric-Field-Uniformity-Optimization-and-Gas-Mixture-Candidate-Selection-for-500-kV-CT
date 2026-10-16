@@ -1,0 +1,10 @@
+mesh,lagrange_refine,smooth,recover,n_points,argmax_index_zero_based,peak_E_kV_per_mm,r_mm_from_expression,z_mm_from_expression,raw_coordinate_0_unit_unassigned,raw_coordinate_1_unit_unassigned,distance_to_HV_mm,distance_to_nearest_floating_corner_mm,boundary_coordinate_match
+Coarse,1,none,off,657,487,5.917583499634307,70.0,273.195324621315,70.0,273.195324621315,0.0,52.74843234242115,hv_selection_boundary_1_geometric_match
+Coarse,3,none,off,2190,1623,5.917583499634307,70.0,273.195324621315,70.0,273.195324621315,0.0,52.74843234242115,hv_selection_boundary_1_geometric_match
+Coarse,5,none,off,4599,3407,5.917583499634307,70.0,273.195324621315,70.0,273.195324621315,0.0,52.74843234242115,hv_selection_boundary_1_geometric_match
+Medium,1,none,off,1365,890,5.948772098304927,70.0,253.44532695208366,70.0,253.44532695208366,0.0,55.223938250455305,hv_selection_boundary_1_geometric_match
+Medium,3,none,off,4550,2969,5.948772098304927,70.0,253.44532695208366,70.0,253.44532695208366,0.0,55.223938250455305,hv_selection_boundary_1_geometric_match
+Medium,5,none,off,9555,6236,5.948772098304927,70.0,253.44532695208366,70.0,253.44532695208366,0.0,55.223938250455305,hv_selection_boundary_1_geometric_match
+Fine,1,none,off,2319,1090,5.95682073599651,70.0,267.6266417629289,70.0,267.6266417629289,0.0,54.77743293368463,hv_selection_boundary_1_geometric_match
+Fine,3,none,off,7730,3633,5.95682073599651,70.0,267.6266417629289,70.0,267.6266417629289,0.0,54.77743293368463,hv_selection_boundary_1_geometric_match
+Fine,5,none,off,16233,7628,5.95682073599651,70.0,267.6266417629289,70.0,267.6266417629289,0.0,54.77743293368463,hv_selection_boundary_1_geometric_match
