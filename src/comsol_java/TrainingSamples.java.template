@@ -1,0 +1,145 @@
+import com.comsol.model.*;
+import com.comsol.model.util.*;
+import java.util.Random;
+import java.util.ArrayList;
+
+/**
+ * Generates 100 Latin-hypercube training points and 30 independent validation
+ * points by repeatedly solving the simplified COMSOL 6.2 axisymmetric model.
+ *
+ * r_hv_eq is an equivalent HV-electrode radius used by this simplified model.
+ * It is a geometric proxy and must not be reported as a resolved electrode-fillet
+ * radius until the detailed device cross-section replaces the baseline geometry.
+ */
+public class __CLASS__ {
+
+  private static final ArrayList<String> DATA_ROWS = new ArrayList<String>();
+
+  private static double[][] lhs(int n, int dimensions, long seed) {
+    Random random = new Random(seed);
+    double[][] sample = new double[n][dimensions];
+    for (int j = 0; j < dimensions; j++) {
+      int[] order = new int[n];
+      for (int i = 0; i < n; i++) order[i] = i;
+      for (int i = n - 1; i > 0; i--) {
+        int k = random.nextInt(i + 1);
+        int tmp = order[i];
+        order[i] = order[k];
+        order[k] = tmp;
+      }
+      for (int i = 0; i < n; i++) {
+        sample[i][j] = (order[i] + random.nextDouble()) / n;
+      }
+    }
+    return sample;
+  }
+
+  private static double scale(double u, double lower, double upper) {
+    return lower + u * (upper - lower);
+  }
+
+  private static Model buildBaseModel() {
+    Model model = ModelUtil.create("KrigingDatasetModel");
+    model.label("GasCT_COMSOL62_Kriging_Dataset_Last_Sample.mph");
+    model.param().set("Un", "500[kV]");
+    model.param().set("Uhv", "Un/sqrt(3)*sqrt(2)");
+    model.param().set("r_hv_eq", "70[mm]");
+    model.param().set("d", "120[mm]");
+    model.param().set("H", "500[mm]");
+    model.param().set("r_m", "120[mm]");
+    model.param().set("t_m", "4[mm]");
+    model.param().set("l_m", "60[mm]");
+    model.param().set("h_m", "0.52");
+    model.param().set("z_m", "h_m*H-l_m/2");
+    model.param().set("epsr_gas", "1.0006");
+
+    model.component().create("comp1", true);
+    model.component("comp1").geom().create("geom1", 2);
+    model.component("comp1").geom("geom1").axisymmetric(true);
+    model.component("comp1").geom("geom1").lengthUnit("mm");
+    model.component("comp1").geom("geom1").create("gas", "Rectangle");
+    model.component("comp1").geom("geom1").feature("gas").set("pos", new String[]{"r_hv_eq", "0"});
+    model.component("comp1").geom("geom1").feature("gas").set("size", new String[]{"d", "H"});
+    model.component("comp1").geom("geom1").create("ie", "Rectangle");
+    model.component("comp1").geom("geom1").feature("ie").set("pos", new String[]{"r_m", "z_m"});
+    model.component("comp1").geom("geom1").feature("ie").set("size", new String[]{"t_m", "l_m"});
+    model.component("comp1").geom("geom1").run();
+
+    model.component("comp1").selection().create("gasdom", "Explicit");
+    model.component("comp1").selection("gasdom").geom("geom1", 2);
+    model.component("comp1").selection("gasdom").set(new int[]{1});
+    model.component("comp1").selection().create("hv", "Explicit");
+    model.component("comp1").selection("hv").geom("geom1", 1);
+    model.component("comp1").selection("hv").set(new int[]{1});
+    model.component("comp1").selection().create("gnd", "Explicit");
+    model.component("comp1").selection("gnd").geom("geom1", 1);
+    model.component("comp1").selection("gnd").set(new int[]{8});
+    model.component("comp1").selection().create("floating", "Explicit");
+    model.component("comp1").selection("floating").geom("geom1", 1);
+    model.component("comp1").selection("floating").set(new int[]{4, 5, 6, 7});
+
+    model.component("comp1").physics().create("es", "Electrostatics", "geom1");
+    model.component("comp1").physics("es").selection().set(new int[]{1});
+    model.component("comp1").physics("es").feature("ccn1").set("epsilonr_mat", "userdef");
+    model.component("comp1").physics("es").feature("ccn1").set("epsilonr", "epsr_gas");
+    model.component("comp1").physics("es").create("pot1", "ElectricPotential", 1);
+    model.component("comp1").physics("es").feature("pot1").selection().set(new int[]{1});
+    model.component("comp1").physics("es").feature("pot1").set("V0", "Uhv");
+    model.component("comp1").physics("es").create("gnd1", "Ground", 1);
+    model.component("comp1").physics("es").feature("gnd1").selection().set(new int[]{8});
+    model.component("comp1").physics("es").create("fp1", "FloatingPotential", 1);
+    model.component("comp1").physics("es").feature("fp1").selection().set(new int[]{4, 5, 6, 7});
+    model.component("comp1").physics("es").feature("fp1").set("Q0", "0[C]");
+    model.component("comp1").mesh().create("mesh1");
+    model.component("comp1").mesh("mesh1").autoMeshSize(5);
+    model.study().create("std1");
+    model.study("std1").create("stat", "Stationary");
+    return model;
+  }
+
+  private static void solveSamples(Model model, String split, double[][] lhs) {
+    for (int i = 0; i < lhs.length; i++) {
+      double rhvEq = scale(lhs[i][0], 50.0, 90.0);
+      double gap = scale(lhs[i][1], 80.0, 160.0);
+      double hm = scale(lhs[i][2], 0.30, 0.65);
+      double lm = scale(lhs[i][3], 30.0, 90.0);
+      model.param().set("r_hv_eq", Double.toString(rhvEq) + "[mm]");
+      model.param().set("d", Double.toString(gap) + "[mm]");
+      model.param().set("h_m", Double.toString(hm));
+      model.param().set("l_m", Double.toString(lm) + "[mm]");
+      model.component("comp1").geom("geom1").run();
+      model.component("comp1").mesh("mesh1").run();
+      model.study("std1").run();
+      model.result().numerical().create("max1", "MaxSurface");
+      model.result().numerical("max1").selection().set(new int[]{1});
+      model.result().numerical("max1").set("expr", "es.normE");
+      model.result().numerical("max1").set("unit", "kV/mm");
+      model.result().numerical().create("glob1", "EvalGlobal");
+      model.result().numerical("glob1").set("expr", "es.fp1.V0_ode");
+      model.result().numerical("glob1").set("unit", "kV");
+      double emax = model.result().numerical("max1").getReal()[0][0];
+      double vfloat = model.result().numerical("glob1").getReal()[0][0];
+      String row = "DATA," + split + "," + (i + 1)
+          + "," + rhvEq + "," + gap + "," + hm + "," + lm
+          + "," + emax + "," + vfloat;
+      DATA_ROWS.add(row);
+      System.out.println(row);
+      model.result().numerical().remove("max1");
+      model.result().numerical().remove("glob1");
+    }
+  }
+
+  public static Model run() {
+    System.out.println("HEADER,split,index,r_hv_eq_mm,d_mm,h_m,l_m_mm,Emax_kV_per_mm,Vfloat_kV");
+    System.out.println("META,training_seed,20260812,validation_seed,20260813,mesh_level,5");
+    Model model = buildBaseModel();
+    solveSamples(model, "training", lhs(100, 4, 20260812L));
+    solveSamples(model, "validation", lhs(30, 4, 20260813L));
+    model.comments(String.join("\n", DATA_ROWS));
+    return model;
+  }
+
+  public static void main(String[] args) {
+    run();
+  }
+}

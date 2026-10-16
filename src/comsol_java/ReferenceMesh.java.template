@@ -1,0 +1,144 @@
+import com.comsol.model.*;
+import com.comsol.model.util.*;
+import java.io.*;
+import java.nio.file.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+
+public class __CLASS__ {
+ static final String CASE="__CASE__", LEVEL="__LEVEL__";
+ static final double HLOCAL=__HLOCAL__;
+ static final Path OUT=Paths.get(__OUTPUT__);
+ static final boolean ROUNDED=CASE.equals("rounded_R2");
+ static Model m;
+ static final String[] EXPR={"es.normE/(1[kV/mm])","r/(1[mm])","z/(1[mm])","V/(1[kV])"};
+ static BufferedWriter writer(String name)throws IOException{return Files.newBufferedWriter(OUT.resolve(name),StandardCharsets.UTF_8);}
+ static void row(BufferedWriter w,Object... a)throws IOException{for(int i=0;i<a.length;i++){if(i>0)w.write(',');String s=String.valueOf(a[i]);if(s.contains(",")||s.contains("\n")||s.contains("\""))s="\""+s.replace("\"","\"\"")+"\"";w.write(s);}w.newLine();}
+ static void check(boolean ok,String s){if(!ok)throw new IllegalStateException(s);}
+ static int[] box(String tag,int dim,double a,double b,double c,double d,String condition){
+  m.component("comp1").selection().create(tag,"Box");
+  m.component("comp1").selection(tag).set("entitydim",dim);
+  m.component("comp1").selection(tag).set("xmin",a);m.component("comp1").selection(tag).set("xmax",b);
+  m.component("comp1").selection(tag).set("ymin",c);m.component("comp1").selection(tag).set("ymax",d);
+  m.component("comp1").selection(tag).set("condition",condition);
+  return m.component("comp1").selection(tag).entities();
+ }
+ static void selections()throws IOException{
+  int[] gas=box("newgas",2,71,72,249,251,"intersects");check(gas.length==1,"Gas anchor selected unexpected domains");
+  int[] hv=box("newhv",1,69.999,70.001,-.001,500.001,"inside");check(hv.length==1,"HV selection count");
+  int[] ground=box("newground",1,189.999,190.001,-.001,500.001,"inside");check(ground.length==1,"Ground selection count");
+  int[] fp=box("newfloat",1,119.999,124.001,229.999,290.001,"inside");check(fp.length==(ROUNDED?6:4),"Floating boundary count: "+Arrays.toString(fp));
+  m.component("comp1").selection("gasdom").set(gas);m.component("comp1").selection("hv").set(hv);
+  m.component("comp1").selection("gnd").set(ground);m.component("comp1").selection("floating").set(fp);
+  int[] endlo=box("endlo",1,119.999,124.001,229.999,232.001,"inside");
+  int[] endhi=box("endhi",1,119.999,124.001,287.999,290.001,"inside");
+  check(endlo.length==(ROUNDED?2:1)&&endhi.length==(ROUNDED?2:1),"End cap selection count");
+  int[] ends=new int[endlo.length+endhi.length];System.arraycopy(endlo,0,ends,0,endlo.length);System.arraycopy(endhi,0,ends,endlo.length,endhi.length);
+  m.component("comp1").selection().create("ends","Explicit");m.component("comp1").selection("ends").geom("geom1",1);m.component("comp1").selection("ends").set(ends);
+  try(BufferedWriter w=writer("boundary_selections.csv")){row(w,"selection","entities","definition_mm");row(w,"gasdom",Arrays.toString(gas),"gas anchor r71..72,z249..251");row(w,"hv",Arrays.toString(hv),"r70,z0..500");row(w,"gnd",Arrays.toString(ground),"r190,z0..500");row(w,"floating",Arrays.toString(fp),"r120..124,z230..290 full envelope");row(w,"ends",Arrays.toString(ends),"lower z230..232 and upper z288..290");}
+ }
+ static void geometry()throws IOException{
+  if(ROUNDED){
+   m.component("comp1").geom("geom1").feature("ie").set("pos",new double[]{120,232});
+   m.component("comp1").geom("geom1").feature("ie").set("size",new double[]{4,56});
+   for(int i=0;i<2;i++){String tag="cap"+i;m.component("comp1").geom("geom1").create(tag,"Circle");m.component("comp1").geom("geom1").feature(tag).set("r",2);m.component("comp1").geom("geom1").feature(tag).set("pos",new double[]{122,i==0?232:288});}
+   m.component("comp1").geom("geom1").create("capsule","Union");
+   m.component("comp1").geom("geom1").feature("capsule").selection("input").set(new String[]{"ie","cap0","cap1"});
+   m.component("comp1").geom("geom1").feature("capsule").set("intbnd",false);
+  }
+  m.component("comp1").geom("geom1").run();selections();
+ }
+ static void size(String tag,String selection,double h,double hmin){
+  m.component("comp1").mesh("mesh1").create(tag,"Size");
+  m.component("comp1").mesh("mesh1").feature(tag).selection().named(selection);
+  m.component("comp1").mesh("mesh1").feature(tag).set("custom","on");
+  m.component("comp1").mesh("mesh1").feature(tag).set("hmax",h);
+  m.component("comp1").mesh("mesh1").feature(tag).set("hmaxactive",true);
+  m.component("comp1").mesh("mesh1").feature(tag).set("hmin",hmin);
+  m.component("comp1").mesh("mesh1").feature(tag).set("hminactive",true);
+  m.component("comp1").mesh("mesh1").feature(tag).set("hgrad",1.2);
+  m.component("comp1").mesh("mesh1").feature(tag).set("hgradactive",true);
+ }
+ static void mesh()throws IOException{
+  m.component("comp1").mesh().remove("mesh1");m.component("comp1").mesh().create("mesh1");
+  m.component("comp1").mesh("mesh1").feature("size").set("custom","on");
+  m.component("comp1").mesh("mesh1").feature("size").set("hmax",4);
+  m.component("comp1").mesh("mesh1").feature("size").set("hmin",HLOCAL/4);
+  m.component("comp1").mesh("mesh1").feature("size").set("hgrad",1.2);
+  size("hvsize","hv",1,HLOCAL/4);size("floatsize","floating",.5,HLOCAL/4);size("endsize","ends",HLOCAL,HLOCAL/4);
+  m.component("comp1").mesh("mesh1").create("ftri","FreeTri");m.component("comp1").mesh("mesh1").feature("ftri").selection().named("gasdom");
+  m.component("comp1").mesh("mesh1").run();
+  exportMesh();
+ }
+ static void exportMesh()throws IOException{
+  double[][] v=m.component("comp1").mesh("mesh1").getVertex();
+  int[][] tri=m.component("comp1").mesh("mesh1").getElem("tri");int[] te=m.component("comp1").mesh("mesh1").getElemEntity("tri");
+  int[][] edge=m.component("comp1").mesh("mesh1").getElem("edg");int[] ee=m.component("comp1").mesh("mesh1").getElemEntity("edg");
+  try(BufferedWriter w=writer("mesh_vertices.csv")){row(w,"index","r_geometry_mm","z_geometry_mm");for(int i=0;i<v[0].length;i++)row(w,i,v[0][i],v[1][i]);}
+  try(BufferedWriter w=writer("mesh_triangles.csv")){row(w,"index","v0","v1","v2","domain");for(int i=0;i<tri[0].length;i++)row(w,i,tri[0][i],tri[1][i],tri[2][i],te[i]);}
+  Set<Integer> ends=new HashSet<Integer>();for(int n:m.component("comp1").selection("ends").entities())ends.add(n);
+  try(BufferedWriter w=writer("mesh_edges.csv")){row(w,"index","v0","v1","boundary","length_mm","end_cap");for(int i=0;i<edge[0].length;i++){int a=edge[0][i],b=edge[1][i];double h=Math.hypot(v[0][a]-v[0][b],v[1][a]-v[1][b]);row(w,i,a,b,ee[i],h,ends.contains(ee[i]));}}
+  try(BufferedWriter w=writer("mesh_statistics.csv")){row(w,"case","level","end_cap_hmax_mm","hmin_setting_mm","bulk_hmax_mm","hv_hmax_mm","floating_straight_hmax_mm","growth","triangles","vertices","min_quality","mean_quality","measure");row(w,CASE,LEVEL,HLOCAL,HLOCAL/4,4,1,.5,1.2,tri[0].length,v[0].length,m.component("comp1").mesh("mesh1").getMinQuality(),m.component("comp1").mesh("mesh1").getMeanQuality(),"volume_vs_circumradius");}
+ }
+ static double[][] data(String tag){double[][][] d=m.result().numerical(tag).getData();check(d.length==4,"Expression count");double[][] a=new double[4][];for(int i=0;i<4;i++){check(d[i].length==1,"Stationary count");a[i]=d[i][0];}return a;}
+ static double[][] interp(String tag,int dim,int[] ids,double[][] pts,double ext){
+  try{m.result().numerical().remove(tag);}catch(RuntimeException ignored){}
+  m.result().numerical().create(tag,"Interp");m.result().numerical(tag).set("data","dset1");m.result().numerical(tag).selection().geom("geom1",dim);m.result().numerical(tag).selection().set(ids);
+  m.result().numerical(tag).set("expr",EXPR);m.result().numerical(tag).set("unit","1");m.result().numerical(tag).set("recover","off");m.result().numerical(tag).set("ext",ext);m.result().numerical(tag).set("coorderr","off");m.result().numerical(tag).setInterpolationCoordinates(pts);return data(tag);
+ }
+ static void exportPoints(String filename,String tag,double[][] p)throws IOException{
+  double[][] d=interp(tag,2,m.component("comp1").selection("gasdom").entities(),p,0);
+  try(BufferedWriter w=writer(filename)){row(w,"index","requested_r_mm","requested_z_mm","r_mm","z_mm","E_kV_per_mm","V_kV","finite");for(int i=0;i<p[0].length;i++){boolean ok=Double.isFinite(d[0][i]);if(ok)check(Math.abs(p[0][i]-d[1][i])<1e-6&&Math.abs(p[1][i]-d[2][i])<1e-6,"Coordinate mismatch");row(w,i,p[0][i],p[1][i],d[1][i],d[2][i],d[0][i],d[3][i],ok);}}
+ }
+ static void cloud()throws IOException{
+  String tag="localcloud";try{m.result().numerical().remove(tag);}catch(RuntimeException ignored){}m.result().numerical().create(tag,"Eval");m.result().numerical(tag).set("data","dset1");m.result().numerical(tag).selection().named("gasdom");m.result().numerical(tag).set("expr",EXPR);m.result().numerical(tag).set("unit","1");m.result().numerical(tag).set("pattern","lagrange");m.result().numerical(tag).set("refine",3);m.result().numerical(tag).set("smooth","none");m.result().numerical(tag).set("recover","off");
+  double[][] d=data(tag);check(d[0].length>0,"No gas values");
+  int gas=-1,hv=-1,fp=-1;double fpmin=Double.POSITIVE_INFINITY,fpmax=-fpmin;
+  try(BufferedWriter w=writer("gas_all_points.csv")){row(w,"index","E_kV_per_mm","r_mm","z_mm","V_kV","on_hv","on_floating");for(int i=0;i<d[0].length;i++){
+   double r=d[1][i],z=d[2][i];check(Double.isFinite(d[0][i]),"Nonfinite cloud field");
+   boolean ishv=Math.abs(r-70)<1e-6;boolean isfp;
+   if(ROUNDED)isfp=((z>=232-1e-7&&z<=288+1e-7)&&(Math.abs(r-120)<1e-6||Math.abs(r-124)<1e-6))||(z<=232+1e-7&&Math.abs(Math.hypot(r-122,z-232)-2)<1e-6)||(z>=288-1e-7&&Math.abs(Math.hypot(r-122,z-288)-2)<1e-6);
+   else isfp=r>=120-1e-7&&r<=124+1e-7&&z>=230-1e-7&&z<=290+1e-7&&(Math.abs(r-120)<1e-6||Math.abs(r-124)<1e-6||Math.abs(z-230)<1e-6||Math.abs(z-290)<1e-6);
+   row(w,i,d[0][i],r,z,d[3][i],ishv,isfp);
+   if(gas<0||d[0][i]>d[0][gas])gas=i;if(ishv&&(hv<0||d[0][i]>d[0][hv]))hv=i;if(isfp){if(fp<0||d[0][i]>d[0][fp])fp=i;fpmin=Math.min(fpmin,d[3][i]);fpmax=Math.max(fpmax,d[3][i]);}
+  }}
+  check(hv>=0&&fp>=0,"Boundary cloud points missing");
+  try(BufferedWriter w=writer("peaks.csv")){row(w,"case","level","scope","same_index","E_kV_per_mm","r_mm","z_mm","V_kV","smooth","recover","sampling_refine");String[] names={"gas","hv","floating"};int[] ids={gas,hv,fp};for(int j=0;j<3;j++){int i=ids[j];row(w,CASE,LEVEL,names[j],i,d[0][i],d[1][i],d[2][i],d[3][i],"none","off",3);}}
+  try{m.result().numerical().remove("localglobal");}catch(RuntimeException ignored){}
+  m.result().numerical().create("localglobal","EvalGlobal");m.result().numerical("localglobal").set("expr","es.fp1.V0_ode/(1[kV])");double vf=m.result().numerical("localglobal").getReal()[0][0];
+  try(BufferedWriter w=writer("floating_potential.csv")){row(w,"floating_V_kV","boundary_min_V_kV","boundary_max_V_kV","Q0","solved_dofs");row(w,vf,fpmin,fpmax,m.component("comp1").physics("es").feature("fp1").getString("Q0"),m.sol("sol1").xmeshInfo().nDofs());}
+ }
+ static void profiles()throws IOException{
+  double[][] anchors={{71,189},{250,200}};exportPoints("anchors.csv","anchors",anchors);
+  for(int j=0;j<2;j++){double[][] p=new double[2][1001];for(int i=0;i<1001;i++){p[0][i]=70+j*.05;p[1][i]=i*.5;}exportPoints(j==0?"hv_profile.csv":"hv_offset_0p05mm.csv","hp"+j,p);}
+  ArrayList<double[]> a=new ArrayList<double[]>();
+  // Shared finite-distance rays; all are retained and checked against the actual gas domain.
+  for(int ir=0;ir<2;ir++)for(int iz=0;iz<2;iz++)for(int ray=0;ray<3;ray++)for(double s:new double[]{.05,.1,.2,.5,1,2,5}){double sr=ir==0?-1:1,sz=iz==0?-1:1;double dr=ray==1?0:sr,dz=ray==0?0:sz;if(ray==2){dr/=Math.sqrt(2);dz/=Math.sqrt(2);}a.add(new double[]{120+4*ir+s*dr,230+60*iz+s*dz});}
+  double[][] p=new double[2][a.size()];for(int i=0;i<a.size();i++){p[0][i]=a.get(i)[0];p[1][i]=a.get(i)[1];}exportPoints("shared_corner_rays.csv","rays",p);
+  a.clear();
+  if(ROUNDED){for(int end=0;end<2;end++)for(int i=0;i<=400;i++){double angle=(end==0?Math.PI:0)+Math.PI*i/400.;a.add(new double[]{122+2.00001*Math.cos(angle),(end==0?232:288)+2.00001*Math.sin(angle)});}}
+  else{for(int end=0;end<2;end++)for(int i=0;i<=400;i++)a.add(new double[]{120+4.*i/400, end==0?229.99999:290.00001});}
+  p=new double[2][a.size()];for(int i=0;i<a.size();i++){p[0][i]=a.get(i)[0];p[1][i]=a.get(i)[1];}exportPoints("end_gas_offset_1e-5mm.csv","endprofile",p);
+ }
+ static void completeOffsetProfile()throws IOException{
+  double[][] p=new double[2][802];
+  for(int end=0;end<2;end++)for(int i=0;i<=400;i++){
+   int j=401*end+i;
+   if(ROUNDED){double angle=(end==0?Math.PI:0)+Math.PI*i/400.;p[0][j]=122+2.05*Math.cos(angle);p[1][j]=(end==0?232:288)+2.05*Math.sin(angle);}
+   else{p[0][j]=120+4.*i/400;p[1][j]=end==0?229.95:290.05;}
+  }
+  exportPoints("end_gas_offset_0p05mm.csv","end005",p);
+ }
+ public static Model run()throws Exception{
+  Files.createDirectories(OUT);
+  m=ModelUtil.loadCopy("ReferenceMesh",__INPUT__);
+  if("__MODE__".equals("solve")){
+   geometry();mesh();m.sol("sol1").clearSolution();m.study("std1").run();
+  }else{
+   exportMesh();
+  }
+  cloud();profiles();completeOffsetProfile();
+  return m;
+ }
+ public static void main(String[] args)throws Exception{run();}
+}

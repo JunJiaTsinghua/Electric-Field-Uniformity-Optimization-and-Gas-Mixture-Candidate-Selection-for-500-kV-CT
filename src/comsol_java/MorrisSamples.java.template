@@ -1,0 +1,150 @@
+import com.comsol.model.*;
+import com.comsol.model.util.*;
+import java.util.ArrayList;
+import java.util.Random;
+
+/**
+ * Ten Morris trajectories, eight finite-element points per trajectory.
+ * Seven variables are implemented as explicit geometric proxies in the
+ * simplified 2D axisymmetric baseline model.
+ */
+public class __CLASS__ {
+  private static final int K = 7;
+  private static final int LEVELS = 4;
+  private static final double DELTA = 2.0 / 3.0;
+  private static final ArrayList<String> DATA_ROWS = new ArrayList<String>();
+
+  private static Model buildModel() {
+    Model model = ModelUtil.create("Morris80Model");
+    model.label("GasCT_COMSOL62_Morris80_Last_Sample.mph");
+    model.param().set("Un", "500[kV]");
+    model.param().set("Uhv", "Un/sqrt(3)*sqrt(2)");
+    model.param().set("r_hv_proxy", "70[mm]");
+    model.param().set("d", "120[mm]");
+    model.param().set("H", "500[mm]");
+    model.param().set("r_g_proxy", "12[mm]");
+    model.param().set("l_m", "60[mm]");
+    model.param().set("h_m", "0.52");
+    model.param().set("l_s_proxy", "160[mm]");
+    model.param().set("theta_s", "45[deg]");
+    model.param().set("t_e", "4[mm]");
+    model.param().set("r_m", "r_hv_proxy+0.42*d");
+    model.param().set("z_m", "h_m*H-l_m/2");
+    model.param().set("l_sh", "25[mm]+0.20*l_s_proxy");
+    model.param().set("r_sh", "r_hv_proxy+0.62*d+0.20*r_g_proxy");
+    model.param().set("z_sh", "0.63*H+0.04*H*sin(theta_s)");
+    model.param().set("epsr_gas", "1.0006");
+
+    model.component().create("comp1", true);
+    model.component("comp1").geom().create("geom1", 2);
+    model.component("comp1").geom("geom1").axisymmetric(true);
+    model.component("comp1").geom("geom1").lengthUnit("mm");
+    model.component("comp1").geom("geom1").create("gas", "Rectangle");
+    model.component("comp1").geom("geom1").feature("gas").set("pos", new String[]{"r_hv_proxy", "0"});
+    model.component("comp1").geom("geom1").feature("gas").set("size", new String[]{"d", "H"});
+    model.component("comp1").geom("geom1").create("ie", "Rectangle");
+    model.component("comp1").geom("geom1").feature("ie").set("pos", new String[]{"r_m", "z_m"});
+    model.component("comp1").geom("geom1").feature("ie").set("size", new String[]{"t_e", "l_m"});
+    model.component("comp1").geom("geom1").create("sh", "Rectangle");
+    model.component("comp1").geom("geom1").feature("sh").set("pos", new String[]{"r_sh", "z_sh"});
+    model.component("comp1").geom("geom1").feature("sh").set("size", new String[]{"t_e", "l_sh"});
+    model.component("comp1").geom("geom1").run();
+
+    model.component("comp1").physics().create("es", "Electrostatics", "geom1");
+    model.component("comp1").physics("es").selection().set(new int[]{1});
+    model.component("comp1").physics("es").feature("ccn1").set("epsilonr_mat", "userdef");
+    model.component("comp1").physics("es").feature("ccn1").set("epsilonr", "epsr_gas");
+    model.component("comp1").physics("es").create("pot1", "ElectricPotential", 1);
+    model.component("comp1").physics("es").feature("pot1").selection().set(new int[]{1});
+    model.component("comp1").physics("es").feature("pot1").set("V0", "Uhv");
+    model.component("comp1").physics("es").create("gnd1", "Ground", 1);
+    model.component("comp1").physics("es").feature("gnd1").selection().set(new int[]{12});
+    model.component("comp1").physics("es").create("fp1", "FloatingPotential", 1);
+    model.component("comp1").physics("es").feature("fp1").selection().set(new int[]{4, 5, 6, 7});
+    model.component("comp1").physics("es").feature("fp1").set("Q0", "0[C]");
+    model.component("comp1").physics("es").create("fp2", "FloatingPotential", 1);
+    model.component("comp1").physics("es").feature("fp2").selection().set(new int[]{8, 9, 10, 11});
+    model.component("comp1").physics("es").feature("fp2").set("Q0", "0[C]");
+    model.component("comp1").mesh().create("mesh1");
+    model.component("comp1").mesh("mesh1").autoMeshSize(5);
+    model.study().create("std1");
+    model.study("std1").create("stat", "Stationary");
+    return model;
+  }
+
+  private static int[] shuffledOrder(Random random) {
+    int[] order = new int[K];
+    for (int i = 0; i < K; i++) order[i] = i;
+    for (int i = K - 1; i > 0; i--) {
+      int j = random.nextInt(i + 1);
+      int temp = order[i]; order[i] = order[j]; order[j] = temp;
+    }
+    return order;
+  }
+
+  private static double scale(double x, double lower, double upper) {
+    return lower + x * (upper - lower);
+  }
+
+  private static void solvePoint(Model model, int trajectory, int point, int changed,
+                                 double[] x, double deltaSigned) {
+    double rhv = scale(x[0], 50.0, 90.0);
+    double d = scale(x[1], 80.0, 160.0);
+    double rg = scale(x[2], 5.0, 25.0);
+    double lm = scale(x[3], 30.0, 90.0);
+    double hm = scale(x[4], 0.30, 0.65);
+    double ls = scale(x[5], 100.0, 220.0);
+    double theta = scale(x[6], 20.0, 70.0);
+    model.param().set("r_hv_proxy", rhv + "[mm]");
+    model.param().set("d", d + "[mm]");
+    model.param().set("r_g_proxy", rg + "[mm]");
+    model.param().set("l_m", lm + "[mm]");
+    model.param().set("h_m", Double.toString(hm));
+    model.param().set("l_s_proxy", ls + "[mm]");
+    model.param().set("theta_s", theta + "[deg]");
+    model.component("comp1").geom("geom1").run();
+    model.component("comp1").mesh("mesh1").run();
+    model.study("std1").run();
+    model.result().numerical().create("max1", "MaxSurface");
+    model.result().numerical("max1").selection().set(new int[]{1});
+    model.result().numerical("max1").set("expr", "es.normE");
+    model.result().numerical("max1").set("unit", "kV/mm");
+    double emax = model.result().numerical("max1").getReal()[0][0];
+    model.result().numerical().remove("max1");
+    String row = "MORRIS," + trajectory + "," + point + "," + changed + "," + deltaSigned
+        + "," + rhv + "," + d + "," + rg + "," + lm + "," + hm + "," + ls + "," + theta
+        + "," + emax;
+    DATA_ROWS.add(row);
+    System.out.println(row);
+  }
+
+  public static Model run() {
+    System.out.println("HEADER,trajectory,point,changed_variable_index,normalized_step,r_hv_proxy_mm,d_mm,r_g_proxy_mm,l_m_mm,h_m,l_s_proxy_mm,theta_s_deg,Emax_kV_per_mm");
+    System.out.println("META,seed,__SEED__,levels,4,delta,0.6666666666666666,trajectories,10,points,80");
+    Random random = new Random(__SEED__L);
+    Model model = buildModel();
+    for (int trajectory = 1; trajectory <= 10; trajectory++) {
+      double[] x = new double[K];
+      int[] direction = new int[K];
+      for (int j = 0; j < K; j++) {
+        direction[j] = random.nextBoolean() ? 1 : -1;
+        int baseLevel = random.nextInt(2);
+        double lower = baseLevel / 3.0;
+        x[j] = direction[j] > 0 ? lower : lower + DELTA;
+      }
+      int[] order = shuffledOrder(random);
+      solvePoint(model, trajectory, 1, -1, x, 0.0);
+      for (int step = 0; step < K; step++) {
+        int changed = order[step];
+        x[changed] += direction[changed] * DELTA;
+        solvePoint(model, trajectory, step + 2, changed, x, direction[changed] * DELTA);
+      }
+    }
+    model.comments(String.join("\n", DATA_ROWS));
+    return model;
+  }
+
+  public static void main(String[] args) {
+    run();
+  }
+}
