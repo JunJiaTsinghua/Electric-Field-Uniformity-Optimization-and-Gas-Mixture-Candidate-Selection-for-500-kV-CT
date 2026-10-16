@@ -1,0 +1,37 @@
+{
+  "sobol": {
+    "orders": [
+      10,
+      20
+    ],
+    "batch_size": 2000,
+    "measure": "independent product-uniform on four geometric input bounds"
+  },
+  "ranking": {
+    "dirichlet_seed": 20261009,
+    "draws": 5000,
+    "concentration": 200.0,
+    "rank_ties": "minimum rank",
+    "preference_weights": {
+      "dielectric_priority": [0.50, 0.15, 0.10, 0.10, 0.15],
+      "thermal_priority": [0.15, 0.50, 0.10, 0.10, 0.15],
+      "detection_priority": [0.15, 0.15, 0.45, 0.10, 0.15],
+      "environment_cost_priority": [0.15, 0.10, 0.10, 0.30, 0.35]
+    }
+  },
+  "scan": {
+    "He_tabulated_percent": [
+      0,
+      1,
+      2,
+      5,
+      10,
+      14.71,
+      20,
+      30,
+      40,
+      50
+    ],
+    "dense_points": 5001
+  }
+}

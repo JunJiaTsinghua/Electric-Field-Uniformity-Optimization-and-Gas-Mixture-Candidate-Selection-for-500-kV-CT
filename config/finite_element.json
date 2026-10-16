@@ -1,0 +1,61 @@
+{
+  "comsol_version": "6.2.0.290",
+  "nominal_line_to_line_kV": 500,
+  "applied_peak_voltage_kV": 408.24829046386304,
+  "gas_relative_permittivity": 1.0006,
+  "reference_geometry_mm": {
+    "r_hv": 70,
+    "radial_gap": 120,
+    "height": 500,
+    "floating_radius_inner": 120,
+    "floating_thickness": 4,
+    "floating_z_low": 230,
+    "floating_z_high": 290
+  },
+  "reference_presets": {
+    "coarse": 7,
+    "medium": 5,
+    "fine": 3
+  },
+  "production_training_mesh": "medium physics-controlled preset 5; sharp reference geometry",
+  "local_cases": [
+    "sharp_rect",
+    "rounded_R2"
+  ],
+  "local_levels": [
+    {
+      "name": "L01",
+      "end_cap_hmax_mm": 0.2
+    },
+    {
+      "name": "L02",
+      "end_cap_hmax_mm": 0.1
+    },
+    {
+      "name": "L03",
+      "end_cap_hmax_mm": 0.05
+    }
+  ],
+  "local_fixed_mesh_settings_mm": {
+    "bulk_hmax": 4,
+    "hv_hmax": 1,
+    "floating_straight_hmax": 0.5
+  },
+  "local_hmin": "end_cap_hmax/4",
+  "growth": 1.2,
+  "rounded_geometry": "2 mm radius semicircular end caps centered at (122,232) and (122,288) mm; envelope r=120..124 and z=230..290 mm; straight section z=232..288 mm.",
+  "field_sampling": {
+    "pattern": "lagrange",
+    "refine": 3,
+    "smooth": "none",
+    "recover": "off"
+  },
+  "stored_mph": "Each mesh-reference model retains its solved field. Morris and training models retain only the last solved field plus all scalar sample records in modelDescription; they do not store a full field for every sample.",
+  "scope": "Two equivalent reference end geometries, each tested at three local mesh sizes. The user-controlled local sequences are distinct from the coarse/medium/fine physics-controlled preset comparison. The surrogate training data were not refitted using the rounded geometry.",
+  "missing_probes": "NaN values in the original gas-offset profiles are retained. The rounded L01 0.00001 mm end profile has 72 nonfinite rows out of 802; finer meshes and all 0.05 mm profiles are complete. Compare common finite points and report missing counts.",
+  "mesh_incidence_definition": "Vertex-incident gas triangles share at least one vertex with an end-cap boundary edge; this is not limited to triangles that share the entire boundary edge.",
+  "data_layout": {
+    "local": "data/mesh/local/*.csv; filter by case and level",
+    "reference_presets": "data/mesh/reference_presets/*.csv; filter by mesh"
+  }
+}

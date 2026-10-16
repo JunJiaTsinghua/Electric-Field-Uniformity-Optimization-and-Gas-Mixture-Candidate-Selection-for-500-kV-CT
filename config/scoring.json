@@ -1,0 +1,187 @@
+{
+  "Eq15": {
+    "formula": "S_ins = a1*N_b(M_E) + a2*N_b(M_PD) + a3*N_b(M_imp)",
+    "coefficients": {
+      "ME": 0.3333333333333333,
+      "MPD": 0.3333333333333333,
+      "Mimp": 0.3333333333333333
+    }
+  },
+  "Eq16": {
+    "formula": "S_th = N_b(lambda_mix) * N_b(M_T)",
+    "M_T_definition": "natural-convection proxy rho^2*cp/(mu*lambda); dimensionless only after normalization"
+  },
+  "Eq17": {
+    "formula": "S_det = b1*N_b(R_O3) + b2*N_b(R_NOx) + b3*N_b(R_He)",
+    "coefficients": {
+      "O3_rate": 0.25,
+      "NOx_rate": 0.25,
+      "He_tracer": 0.5
+    },
+    "proxy_definitions": {
+      "R_O3": "alpha_O2*p",
+      "R_NOx": "alpha_N2*alpha_O2*p",
+      "R_He": "alpha_He*sqrt(M_N2/M_He)/p"
+    }
+  },
+  "Eq18": {
+    "formula": "S_env = 1 - N_c(GWP100) - gamma*N_c(oxidizer_handling_index)",
+    "gamma": 0.15,
+    "note": "Declared oxidizer-handling scenario proxy for the N2/O2/He mixture; not a lifecycle-impact assessment."
+  },
+  "Eq19": {
+    "formula": "S_cost = c1*N_c(K_gas) + c2*N_c(K_seal) + c3*N_c(K_mfg)",
+    "coefficients": {
+      "gas": 0.5,
+      "sealing": 0.3,
+      "manufacturing": 0.2
+    }
+  },
+  "normalization": {
+    "benefit": "N_b(x)=clip((x-x_min)/(x_max-x_min),0,1)",
+    "cost": "The raw cost indicators are first min-max normalized; the comprehensive benefit uses 1-S_cost.",
+    "out_of_range": "clip to [0,1]",
+    "bounds": {
+      "lambda_mix_W_per_mK": [
+        0.026001138290576334,
+        0.03856529191969829
+      ],
+      "natural_convection_indicator": [
+        14430140959.954994,
+        188665104695.43588
+      ],
+      "O3_rate_proxy": [
+        0.04000000000000001,
+        0.2
+      ],
+      "NOx_rate_proxy": [
+        0.016000000000000004,
+        0.15000000000000002
+      ],
+      "He_tracer_proxy": [
+        0.0,
+        3.306905011290726
+      ],
+      "Kgas": [
+        1.03,
+        13.02
+      ],
+      "Kseal": [
+        1.0,
+        4.5
+      ],
+      "Kmfg": [
+        1.0000000000000002,
+        2.5
+      ],
+      "ME": [
+        1.0,
+        5.5
+      ],
+      "MPD": [
+        1.1,
+        2.675
+      ],
+      "Mimp": [
+        1.1,
+        2.45
+      ],
+      "GWP100": [
+        0.0,
+        23500.0
+      ],
+      "oxidizer_handling_index": [
+        0.0,
+        1.0
+      ]
+    },
+    "bound_derivation": "Gas-property, detection, and cost bounds are deterministic extrema over a 91x31 feasible composition grid at p=0.4 and 0.8 MPa. Margin bounds are declared engineering scenario bounds.",
+    "zero_range": "The implemented normalization requires upper > lower; all declared bounds have positive width."
+  },
+  "gas": {
+    "N2": {
+      "molar_mass_g_per_mol": 28.0134,
+      "thermal_conductivity_W_per_mK_300K": 0.0259,
+      "dynamic_viscosity_Pa_s_300K": 1.79e-05,
+      "molar_cp_J_per_molK_300K": 29.12,
+      "Ebd0_kV_per_mm_0p1MPa_293K": 3.0
+    },
+    "O2": {
+      "molar_mass_g_per_mol": 31.9988,
+      "thermal_conductivity_W_per_mK_300K": 0.0265,
+      "dynamic_viscosity_Pa_s_300K": 2.07e-05,
+      "molar_cp_J_per_molK_300K": 29.38,
+      "Ebd0_kV_per_mm_0p1MPa_293K": 3.0
+    },
+    "He": {
+      "molar_mass_g_per_mol": 4.002602,
+      "thermal_conductivity_W_per_mK_300K": 0.1557,
+      "dynamic_viscosity_Pa_s_300K": 1.96e-05,
+      "molar_cp_J_per_molK_300K": 20.786,
+      "Ebd0_kV_per_mm_0p1MPa_293K": 0.9
+    }
+  },
+  "variable_bounds": {
+    "r_hv_eq_mm": [
+      50.0,
+      90.0
+    ],
+    "d_mm": [
+      80.0,
+      160.0
+    ],
+    "h_m": [
+      0.3,
+      0.65
+    ],
+    "l_m_mm": [
+      30.0,
+      90.0
+    ],
+    "alpha_N2": [
+      0.4,
+      0.85
+    ],
+    "alpha_O2": [
+      0.1,
+      0.25
+    ],
+    "alpha_He": [
+      0.0,
+      0.5
+    ],
+    "p_MPa": [
+      0.4,
+      0.8
+    ]
+  },
+  "internal_weights": {
+    "Eq15_a": {
+      "ME": 0.3333333333333333,
+      "MPD": 0.3333333333333333,
+      "Mimp": 0.3333333333333333
+    },
+    "Eq17_b": {
+      "O3_rate": 0.25,
+      "NOx_rate": 0.25,
+      "He_tracer": 0.5
+    },
+    "Eq18_gamma": 0.15,
+    "Eq19_c": {
+      "gas": 0.5,
+      "sealing": 0.3,
+      "manufacturing": 0.2
+    }
+  },
+  "reference_temperature_K": 293.15,
+  "reference_pressure_MPa": 0.1,
+  "validation_RMSE_kV_per_mm": 0.04625271143248838,
+  "decision_criteria": [
+    "dielectric",
+    "thermal",
+    "detection",
+    "environment",
+    "cost_benefit"
+  ],
+  "bounds_usage": "Scenario scores use the fixed baseline normalization bounds, including altered He-cost assumptions."
+}

@@ -1,0 +1,50 @@
+{
+  "seed": 20260815,
+  "samples_per_candidate": 2000,
+  "candidate_count": 67,
+  "validation_RMSE_kV_per_mm": 0.04625271143248838,
+  "minimum_field_kV_per_mm": 0.1,
+  "percentile_checkpoints": [
+    250,
+    500,
+    1000,
+    2000
+  ],
+  "geometry_gaussian_sd": [
+    0.3,
+    0.5,
+    0.005,
+    0.5
+  ],
+  "geometry_units": [
+    "mm",
+    "mm",
+    "dimensionless",
+    "mm"
+  ],
+  "composition_sd": 0.01,
+  "temperature_uniform_K": [
+    233,
+    333
+  ],
+  "fill_error_sd": 0.025,
+  "fill_error_clip": [
+    -0.075,
+    0.075
+  ],
+  "pressure_model": "closed fixed volume: p_actual=p_nominal*(T/293.15)*(1+fill_error)",
+  "gas_model_factor": {
+    "distribution": "normal",
+    "mean": 1,
+    "sd": 0.08,
+    "operation": "clip",
+    "bounds": [
+      0.76,
+      1.24
+    ]
+  },
+  "feasibility_summary": {
+    "mean_margin_min": 1.5,
+    "P5_margin_min": 1.2
+  }
+}
