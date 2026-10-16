@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.py[cod]
+generated/
+results/
+my_results/
+.comsol_preferences/
+*.class
+*.log
+*.mph.recovery
+*.mph.status
+.DS_Store
+Thumbs.db

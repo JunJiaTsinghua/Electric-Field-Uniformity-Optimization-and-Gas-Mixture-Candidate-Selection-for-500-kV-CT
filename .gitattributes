@@ -1,0 +1,7 @@
+# Keep the released file bytes consistent with CHECKSUMS.csv on every platform.
+* -text
+
+*.mph binary
+*.joblib binary
+*.npz binary
+*.gz binary
